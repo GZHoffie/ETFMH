@@ -1,5 +1,6 @@
 from db_sketching.utils import Seq2KMers
 from Bio import SeqIO
+import numpy as np
 
 class KMerSet:
     def __init__(self, k) -> None:
@@ -29,7 +30,9 @@ class KMerSet:
         return intersection / len(self.set)
 
     def ANI_estimation(self, that):
-        return self.containment(that) ** (1/self.k)
+        #return self.containment(that) ** (1/self.k)
+        j = self.resemblence(that)
+        return 1 + 1/self.k * np.log(2 * j / (1 + j))
 
 
 class FracMinHash(KMerSet):

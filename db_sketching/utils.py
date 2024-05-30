@@ -22,8 +22,6 @@ class Seq2KMers:
         if (self._l < self._k):
             print(f"[ERROR]\t\tthe window length (currently {self._l}) must be equal or larger than the seed length (currently {self._k}).")
             return
-        else:
-            print(f"[INFO]\t\tSeed length set to {self._k}, estimated vocabulary size {int(4 ** self._k / 2)}.")
 
         # Utils to find minimizers
         self._nucleotide_to_hash = {'A': 0, 'a': 0,
