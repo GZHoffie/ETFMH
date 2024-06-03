@@ -1,41 +1,88 @@
 from db_sketching.utils import Seq2KMers
 from Bio import SeqIO
-import numpy as np
 
 class KMerSet:
-    def __init__(self, k) -> None:
+    """
+    Base class of the k-mer set.
+    Finding the k-mer set given a (list of) sequences.
+    Args:
+        - k (int): length of the k-mer.
+    """
+    def __init__(self, k : int) -> None:
+        # The set of k-mers
         self.set = set()
+
+        # Length of k-mer
         self.k = k
+
+        # Method to turn sequence into list of k-mers
         self.seq2vec = Seq2KMers(k)
     
-    def insert_sequence(self, sequence):
+    def insert_sequence(self, sequence : str):
+        """
+        Insert the sequence into k-mer set.
+        """
         kmers = self.seq2vec.canonical_kmers(sequence)
         self.set.update(kmers)
     
     def insert_file_list(self, file_list):
+        """
+        Given a list of fasta files, insert all sequences in the files into the 
+        k-mer set.
+        Args:
+            - file_list (List[str]): a list of fasta files.
+        """
         for file in file_list:
             for record in SeqIO.parse(file, "fasta"):
                 self.insert_sequence(str(record.seq))
 
     def reset(self):
+        """
+        Set the k-mer set to empty.
+        """
         self.set = set()
     
     def resemblence(self, that):
+        """
+        Calculate the Jaccard index between self.set and that.set.
+        Args:
+            - that (KMerSet): Another KMerSet object to compare to.
+        """
         intersection = len(self.set.intersection(that.set))
         union = len(self.set.union(that.set))
         return intersection / union
     
     def containment(self, that):
+        """
+        Calculate the containment index of self.set in that.set.
+        Args:
+            - that (KMerSet): Another KMerSet object to compare to.
+        """
         intersection = len(self.set.intersection(that.set))
         return intersection / len(self.set)
 
     def ANI_estimation(self, that):
-        #return self.containment(that) ** (1/self.k)
-        j = self.resemblence(that)
-        return 1 + 1/self.k * np.log(2 * j / (1 + j))
+        """
+        Estimate ANI using the default estimator.
+        Args:
+            - that (KMerSet): Another KMerSet object to compare to.
+        """
+        # Estimator using binomial distribution
+        return self.containment(that) ** (1/self.k)
+    
+        # Estimator using Poisson distribution
+        #j = self.containment(that)
+        #return 1 + 1/self.k * np.log(2 * j / (1 + j))
 
 
 class FracMinHash(KMerSet):
+    """
+    A very simple implementation of FracMinHash.
+    Args:
+        - condition (function<bool>): a function that takes in a k-mer hash value and
+          returns a boolean value. If it returns true, we include that k-mer in our subset.
+        - k (int): length of k-mer.
+    """
     def __init__(self, condition, k) -> None:
         super().__init__(k)
         self.condition = condition
@@ -45,8 +92,4 @@ class FracMinHash(KMerSet):
         self.set.update([i for i in kmers if self.condition(i)])
 
 
-class ErrorTolerantFracMinHash(FracMinHash):
-    def __init__(self, condition, k) -> None:
-        super().__init__(condition, k)
-        self.error_tolerance_map = self._init_map()
 
