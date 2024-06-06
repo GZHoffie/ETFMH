@@ -93,3 +93,29 @@ class FracMinHash(KMerSet):
 
 
 
+class RandomNucleotideSampling(FracMinHash):
+    def __init__(self, condition, k) -> None:
+        super().__init__(condition, k)
+    
+    def ANI_estimation(self, that):
+        # Find containment index of the k-mer set
+        kmer_set_containment = len(self.set.intersection(that.set)) / len(self.set)
+
+        # Find containment index of the (k-1)-mer set
+        this_k_1_mer_set = set([i >> 2 for i in self.set])
+        that_k_1_mer_set = set([i >> 2 for i in that.set])
+        k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
+        #print(kmer_set_containment, k_1_mer_set_containment)
+        return kmer_set_containment / k_1_mer_set_containment
+
+
+if __name__ == "__main__":
+    def all(kmer_hash):
+        return True
+    
+    a = RandomNucleotideSampling(all, 12)
+    a.insert_sequence("CGCGCACGTCGTCGTAC")
+    b = RandomNucleotideSampling(all, 12)
+    b.insert_sequence("CGCGCACGTCGTCGTAG")
+
+    print(a.ANI_estimation(b))

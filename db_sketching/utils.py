@@ -1,6 +1,5 @@
 from Bio.Seq import Seq
 from tqdm import tqdm
-import heapdict
 
 class Seq2KMers:
     """
@@ -81,7 +80,7 @@ class Seq2KMers:
 
     def canonical_kmers(self, sequence : str):
         """
-        Given an input sequence, find all the canonical k-mers inside, in the form of hash values.
+        Given an input sequence, find all the canonical k-mers inside, in the form of a list of hash values.
         """
         forward_hash = self._hash(sequence)
         reverse_hash = self._rev_comp(forward_hash)
