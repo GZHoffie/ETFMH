@@ -105,7 +105,7 @@ class RandomNucleotideSampling(FracMinHash):
         this_k_1_mer_set = set([i >> 2 for i in self.set])
         that_k_1_mer_set = set([i >> 2 for i in that.set])
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
-        #print(kmer_set_containment, k_1_mer_set_containment)
+        print(kmer_set_containment, k_1_mer_set_containment)
         return kmer_set_containment / k_1_mer_set_containment
 
 
