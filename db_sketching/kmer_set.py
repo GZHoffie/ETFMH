@@ -24,6 +24,16 @@ class KMerSet:
         """
         kmers = self.seq2vec.canonical_kmers(sequence)
         self.set.update(kmers)
+
+    def insert_file(self, file):
+        """
+        Given a fasta file, insert all sequences in the files into the 
+        k-mer set.
+        Args:
+            - file (str): file name of the fasta file .
+        """
+        for record in SeqIO.parse(file, "fasta"):
+            self.insert_sequence(str(record.seq))
     
     def insert_file_list(self, file_list):
         """
@@ -33,8 +43,7 @@ class KMerSet:
             - file_list (List[str]): a list of fasta files.
         """
         for file in file_list:
-            for record in SeqIO.parse(file, "fasta"):
-                self.insert_sequence(str(record.seq))
+            self.insert_file(file)
 
     def reset(self):
         """
