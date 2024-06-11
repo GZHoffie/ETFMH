@@ -97,6 +97,10 @@ class RandomNucleotideSampling(FracMinHash):
     def __init__(self, condition, k) -> None:
         super().__init__(condition, k)
     
+    def truncate_set(self, l):
+        return set([i >> (2 * l) for i in self.set])
+
+    
     def ANI_estimation(self, that):
         # Find containment index of the k-mer set
         kmer_set_containment = len(self.set.intersection(that.set)) / len(self.set)
