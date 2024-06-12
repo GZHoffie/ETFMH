@@ -7,13 +7,15 @@ class KMerSet:
     Finding the k-mer set given a (list of) sequences.
     Args:
         - k (int): length of the k-mer.
+        - canonical (bool): whether we use canonical k-mers.
     """
-    def __init__(self, k : int) -> None:
+    def __init__(self, k : int, canonical: bool = False) -> None:
         # The set of k-mers
         self.set = set()
 
         # Length of k-mer
         self.k = k
+        self.canonical = canonical
 
         # Method to turn sequence into list of k-mers
         self.seq2vec = Seq2KMers(k)
@@ -22,7 +24,11 @@ class KMerSet:
         """
         Insert the sequence into k-mer set.
         """
-        kmers = self.seq2vec.canonical_kmers(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
         self.set.update(kmers)
     
     def insert_file_list(self, file_list):
@@ -83,12 +89,16 @@ class FracMinHash(KMerSet):
           returns a boolean value. If it returns true, we include that k-mer in our subset.
         - k (int): length of k-mer.
     """
-    def __init__(self, condition, k) -> None:
-        super().__init__(k)
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(k, canonical)
         self.condition = condition
     
     def insert_sequence(self, sequence):
-        kmers = self.seq2vec.canonical_kmers(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
         self.set.update([i for i in kmers if self.condition(i)])
 
 
@@ -98,8 +108,8 @@ class TruncatedKMerSet(FracMinHash):
     Create (k-l)-mer set based on the constructed k-mer sets and
     try to infer ANI.
     """
-    def __init__(self, condition, k) -> None:
-        super().__init__(condition, k)
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(condition, k, canonical)
     
     def truncate_set(self, l):
         return set([i >> (2 * l) for i in self.set])
@@ -119,12 +129,16 @@ class TruncatedKMerSet(FracMinHash):
 
 
 class ErrorTolerantFracMinHash(FracMinHash):
-    def __init__(self, condition, k) -> None:
-        super().__init__(condition, k)
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(condition, k, canonical)
         self.kmer = KMer(k)
     
     def insert_sequence(self, sequence):
-        kmers = self.seq2vec.canonical_kmers(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
         for i in kmers:
             self.set.update([j for j in self.kmer.distance_one_neighbors(i) if self.condition(j)])
 

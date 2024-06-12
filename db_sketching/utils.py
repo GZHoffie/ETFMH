@@ -79,6 +79,9 @@ class Seq2KMers:
                 hash_values.append(current_hash)
         
         return hash_values
+    
+    def kmers(self, sequence : str):
+        return self._kmers(self._hash(sequence))
 
     def canonical_kmers(self, sequence : str):
         """
@@ -246,7 +249,7 @@ if __name__ == "__main__":
     print(seq2kmers.all_canonical_kmers())
     print(seq2kmers.canonical_kmers("ACGTGGGCGT"))
 
-    a = KMer(12)
+    a = KMer(19)
     print(a.distance_one_neighbors(0))
 
 
