@@ -93,7 +93,11 @@ class FracMinHash(KMerSet):
 
 
 
-class RandomNucleotideSampling(FracMinHash):
+class TruncatedKMerSet(FracMinHash):
+    """
+    Create (k-l)-mer set based on the constructed k-mer sets and
+    try to infer ANI.
+    """
     def __init__(self, condition, k) -> None:
         super().__init__(condition, k)
     
@@ -113,13 +117,31 @@ class RandomNucleotideSampling(FracMinHash):
         return kmer_set_containment / k_1_mer_set_containment
 
 
+
+class SimHash(FracMinHash):
+    def __init__(self, condition, k, s) -> None:
+        super().__init__(condition, k)
+        self.s = s
+        self.smer_dict = self._generate_smer_hash()
+    
+    def _generate_smer_hash(self):
+        # Find all canonical k-mer
+        pass
+
+    
+    def _smer_hash(self, kmer):
+        """
+        Create SimHash hash value using 
+        """
+        pass
+
 if __name__ == "__main__":
     def all(kmer_hash):
         return True
     
-    a = RandomNucleotideSampling(all, 12)
+    a = TruncatedKMerSet(all, 12)
     a.insert_sequence("CGCGCACGTCGTCGTAC")
-    b = RandomNucleotideSampling(all, 12)
+    b = TruncatedKMerSet(all, 12)
     b.insert_sequence("CGCGCACGTCGTCGTAG")
 
     print(a.ANI_estimation(b))

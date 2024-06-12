@@ -1,5 +1,6 @@
 from Bio.Seq import Seq
 from tqdm import tqdm
+import heapdict
 
 class Seq2KMers:
     """
@@ -90,6 +91,57 @@ class Seq2KMers:
 
         min_kmers = [min(i, j) for i, j in zip(forward_kmers, reversed(reverse_kmers))]
         return min_kmers
+
+    def minimizers(self, sequence, window_size, hash_mask=0):
+        """
+        Find the minimizers of the sequence.
+
+        Args:
+            - sequence (str): the sequence to be converted.
+            - window_size (int): The window size in which to find minimizer.
+            - hash_mask (int): Can be a large integer to indicate a random permutation
+              of k-mer hash values.
+        """
+        minimizers = []
+        if len(sequence) - self._k + 1 <= 0:
+            return minimizers
+        
+        if window_size < self._k:
+            print("[ERROR]\t\tThe window size must be at least k.")
+            return minimizers
+        
+        # Find hash values of k-mers
+        forward_hash = self._hash(sequence)
+        reverse_hash = self._rev_comp(forward_hash)
+
+        masked_forward_kmers = [h ^ hash_mask for h in self._kmers(forward_hash)]
+        masked_reverse_kmers = [h ^ hash_mask for h in self._kmers(reverse_hash)]
+
+        # find canonical k-mers
+        masked_min_kmers = [min(i, j) for i, j in zip(masked_forward_kmers, reversed(masked_reverse_kmers))]
+
+        # Find min in sliding window
+        sliding_window = heapdict.heapdict()
+        for i in range(min(window_size - self._k + 1, len(masked_min_kmers))):
+            sliding_window[i] = masked_min_kmers[i]
+
+        if len(sliding_window) != 0:
+            minimizers.append(sliding_window.peekitem()[1])
+
+        for i in range(len(masked_min_kmers) - window_size):
+            sliding_window.pop(i)
+            current_index = i + window_size - self._k + 1
+            sliding_window[current_index] = masked_min_kmers[current_index]
+            if len(sliding_window) != 0:
+                minimizer = sliding_window.peekitem()[1]
+                if minimizers[-1] != minimizer:
+                    minimizers.append(minimizer)
+
+        unmasked_minimizers = [m ^ hash_mask for m in minimizers]
+        tokens = [m for m in unmasked_minimizers]
+        #print(tokens)
+
+        return tokens
 
 
 
