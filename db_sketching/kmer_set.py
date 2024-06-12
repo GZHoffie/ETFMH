@@ -27,6 +27,7 @@ class KMerSet:
         """
         Insert the sequence into k-mer set.
         """
+        self.length += len(sequence)
         if self.canonical:
             kmers = self.seq2vec.canonical_kmers(sequence)
         else:
