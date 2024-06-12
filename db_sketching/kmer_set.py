@@ -138,8 +138,14 @@ class TruncatedKMerSet(FracMinHash):
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
         print(kmer_set_containment, k_1_mer_set_containment)
         return kmer_set_containment / k_1_mer_set_containment
+    
+    def k_specific_containment(self, that, k):
+        self_low_kmer_set = self.truncate_set(self.k-k)
+        that_low_kmer_set = that.truncate_set(that.k-k)
+        intersection = len(self_low_kmer_set.intersection(that_low_kmer_set))
+        return intersection / len(self_low_kmer_set)
 
-
+        
 
 class ErrorTolerantFracMinHash(FracMinHash):
     def __init__(self, condition, k, canonical) -> None:
