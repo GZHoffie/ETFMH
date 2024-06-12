@@ -1,4 +1,4 @@
-from db_sketching.utils import Seq2KMers
+from db_sketching.utils import Seq2KMers, KMer
 from Bio import SeqIO
 
 class KMerSet:
@@ -7,13 +7,15 @@ class KMerSet:
     Finding the k-mer set given a (list of) sequences.
     Args:
         - k (int): length of the k-mer.
+        - canonical (bool): whether we use canonical k-mers.
     """
-    def __init__(self, k : int) -> None:
+    def __init__(self, k : int, canonical: bool = False) -> None:
         # The set of k-mers
         self.set = set()
 
         # Length of k-mer
         self.k = k
+        self.canonical = canonical
 
         # Method to turn sequence into list of k-mers
         self.seq2vec = Seq2KMers(k)
@@ -25,8 +27,11 @@ class KMerSet:
         """
         Insert the sequence into k-mer set.
         """
-        self.length += len(sequence)
-        kmers = self.seq2vec.canonical_kmers(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
         self.set.update(kmers)
 
     def insert_file(self, file):
@@ -96,33 +101,31 @@ class FracMinHash(KMerSet):
           returns a boolean value. If it returns true, we include that k-mer in our subset.
         - k (int): length of k-mer.
     """
-    def __init__(self, condition, k) -> None:
-        super().__init__(k)
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(k, canonical)
         self.condition = condition
     
     def insert_sequence(self, sequence):
-        kmers = self.seq2vec.canonical_kmers(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
         self.set.update([i for i in kmers if self.condition(i)])
 
-class CMashKmerSet(FracMinHash):
+
+
+class TruncatedKMerSet(FracMinHash):
     """
-    Computes hashes at initial length k, and use prefixes for smaller values of k
+    Create (k-l)-mer set based on the constructed k-mer sets and
+    try to infer ANI.
     """
-    def k_reduced_set(self, k):
-        # print(set((kmer >> (2*(self.k-k))) for kmer in self.set))
-        return set((kmer >> (2*(self.k-k))) for kmer in self.set)
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(condition, k, canonical)
+    
+    def truncate_set(self, l):
+        return set([i >> (2 * l) for i in self.set])
 
-    def k_specific_containment(self, that, k):
-        self_low_kmer_set = self.k_reduced_set(k)
-        that_low_kmer_set = that.k_reduced_set(k)
-        intersection = len(self_low_kmer_set.intersection(that_low_kmer_set))
-        return intersection / len(self_low_kmer_set)
-        
-
-
-class RandomNucleotideSampling(FracMinHash):
-    def __init__(self, condition, k) -> None:
-        super().__init__(condition, k)
     
     def ANI_estimation(self, that):
         # Find containment index of the k-mer set
@@ -132,17 +135,33 @@ class RandomNucleotideSampling(FracMinHash):
         this_k_1_mer_set = set([i >> 2 for i in self.set])
         that_k_1_mer_set = set([i >> 2 for i in that.set])
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
-        #print(kmer_set_containment, k_1_mer_set_containment)
+        print(kmer_set_containment, k_1_mer_set_containment)
         return kmer_set_containment / k_1_mer_set_containment
+
+
+
+class ErrorTolerantFracMinHash(FracMinHash):
+    def __init__(self, condition, k, canonical) -> None:
+        super().__init__(condition, k, canonical)
+        self.kmer = KMer(k)
+    
+    def insert_sequence(self, sequence):
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
+        for i in kmers:
+            self.set.update([j for j in self.kmer.distance_one_neighbors(i) if self.condition(j)])
 
 
 if __name__ == "__main__":
     def all(kmer_hash):
         return True
     
-    a = RandomNucleotideSampling(all, 12)
+    a = TruncatedKMerSet(all, 12)
     a.insert_sequence("CGCGCACGTCGTCGTAC")
-    b = RandomNucleotideSampling(all, 12)
+    b = TruncatedKMerSet(all, 12)
     b.insert_sequence("CGCGCACGTCGTCGTAG")
 
     print(a.ANI_estimation(b))
