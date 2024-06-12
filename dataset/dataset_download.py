@@ -100,4 +100,4 @@ if __name__ == "__main__":
     
     # Read metadata
     metadata_df = pd.read_csv("/home/bensonlzl/Downloads/metadata_with_taxid.csv")
-    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=10, level="family")
+    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=100, level="family")

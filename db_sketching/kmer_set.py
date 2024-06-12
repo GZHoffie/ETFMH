@@ -17,11 +17,15 @@ class KMerSet:
 
         # Method to turn sequence into list of k-mers
         self.seq2vec = Seq2KMers(k)
+
+        # Total length of sequences
+        self.length = 0
     
     def insert_sequence(self, sequence : str):
         """
         Insert the sequence into k-mer set.
         """
+        self.length += len(sequence)
         kmers = self.seq2vec.canonical_kmers(sequence)
         self.set.update(kmers)
 
@@ -100,6 +104,20 @@ class FracMinHash(KMerSet):
         kmers = self.seq2vec.canonical_kmers(sequence)
         self.set.update([i for i in kmers if self.condition(i)])
 
+class CMashKmerSet(FracMinHash):
+    """
+    Computes hashes at initial length k, and use prefixes for smaller values of k
+    """
+    def k_reduced_set(self, k):
+        # print(set((kmer >> (2*(self.k-k))) for kmer in self.set))
+        return set((kmer >> (2*(self.k-k))) for kmer in self.set)
+
+    def k_specific_containment(self, that, k):
+        self_low_kmer_set = self.k_reduced_set(k)
+        that_low_kmer_set = that.k_reduced_set(k)
+        intersection = len(self_low_kmer_set.intersection(that_low_kmer_set))
+        return intersection / len(self_low_kmer_set)
+        
 
 
 class RandomNucleotideSampling(FracMinHash):
