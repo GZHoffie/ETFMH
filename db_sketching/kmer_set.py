@@ -1,4 +1,4 @@
-from db_sketching.utils import Seq2KMers
+from db_sketching.utils import Seq2KMers, KMer
 from Bio import SeqIO
 
 class KMerSet:
@@ -118,22 +118,16 @@ class TruncatedKMerSet(FracMinHash):
 
 
 
-class SimHash(FracMinHash):
-    def __init__(self, condition, k, s) -> None:
+class ErrorTolerantFracMinHash(FracMinHash):
+    def __init__(self, condition, k) -> None:
         super().__init__(condition, k)
-        self.s = s
-        self.smer_dict = self._generate_smer_hash()
+        self.kmer = KMer(k)
     
-    def _generate_smer_hash(self):
-        # Find all canonical k-mer
-        pass
+    def insert_sequence(self, sequence):
+        kmers = self.seq2vec.canonical_kmers(sequence)
+        for i in kmers:
+            self.set.update([j for j in self.kmer.distance_one_neighbors(i) if self.condition(j)])
 
-    
-    def _smer_hash(self, kmer):
-        """
-        Create SimHash hash value using 
-        """
-        pass
 
 if __name__ == "__main__":
     def all(kmer_hash):
