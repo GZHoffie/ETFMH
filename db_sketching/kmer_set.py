@@ -19,17 +19,31 @@ class KMerSet:
 
         # Method to turn sequence into list of k-mers
         self.seq2vec = Seq2KMers(k)
+
+        # Total length of sequences
+        self.length = 0
     
     def insert_sequence(self, sequence : str):
         """
         Insert the sequence into k-mer set.
         """
+        self.length += len(sequence)
         if self.canonical:
             kmers = self.seq2vec.canonical_kmers(sequence)
         else:
             kmers = self.seq2vec.kmers(sequence)
 
         self.set.update(kmers)
+
+    def insert_file(self, file):
+        """
+        Given a fasta file, insert all sequences in the files into the 
+        k-mer set.
+        Args:
+            - file (str): file name of the fasta file .
+        """
+        for record in SeqIO.parse(file, "fasta"):
+            self.insert_sequence(str(record.seq))
     
     def insert_file_list(self, file_list):
         """
@@ -39,8 +53,7 @@ class KMerSet:
             - file_list (List[str]): a list of fasta files.
         """
         for file in file_list:
-            for record in SeqIO.parse(file, "fasta"):
-                self.insert_sequence(str(record.seq))
+            self.insert_file(file)
 
     def reset(self):
         """
@@ -148,8 +161,14 @@ class TruncatedKMerSet(FracMinHash):
         print("Estimation using k-1", k_1_mer_set_containment ** (1/(self.k-1)))
         print("Estimation using conditional prob", kmer_set_containment / k_1_mer_set_containment)
         return kmer_set_containment / k_1_mer_set_containment
+    
+    def k_specific_containment(self, that, k):
+        self_low_kmer_set = self.truncate_set(self.k-k)
+        that_low_kmer_set = that.truncate_set(that.k-k)
+        intersection = len(self_low_kmer_set.intersection(that_low_kmer_set))
+        return intersection / len(self_low_kmer_set)
 
-
+        
 
 class ErrorTolerantFracMinHash(FracMinHash):
     def __init__(self, condition, k, canonical=False) -> None:

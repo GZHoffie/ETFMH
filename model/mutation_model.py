@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import statistics
+import random
 
 class MutationModel:
     """
@@ -59,16 +62,13 @@ class Prev1MutationModel(TrueFalseMutationModel):
 
 if __name__ == "__main__":
     ANI = 0.90
-    LENGTH = 1000000
-    KMAX = 60
+    LENGTH = 10000
+    KMAX = 40
+    SAMPLES = 1000
 
-    m = RandomMutationModel(ANI, LENGTH)
-    for i in range(1, KMAX + 1):
-        containment = m.containment(i)
-        print(i, containment, containment ** (1/i))
+    # m = RandomMutationModel(ANI, LENGTH)
+    # for i in range(1, KMAX + 1):
+    #     containment = m.containment(i)
+    #     print(i, containment, containment ** (1/i))
 
-        
-    pm = Prev1MutationModel(0.10, 0.9, LENGTH)
-    for i in range(1, KMAX + 1):
-        containment = pm.containment(i)
-        print(i, pm.ani, pm.ground_ani, containment, containment ** (1/i))
+    

@@ -99,8 +99,5 @@ if __name__ == "__main__":
     d = ReferenceGenomeDownloader()
     
     # Read metadata
-    metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
-
-    # Download 10 genomes in the genus escherichia
-    metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="family")
+    metadata_df = pd.read_csv("/home/bensonlzl/Downloads/metadata_with_taxid.csv")
+    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=100, level="family")
