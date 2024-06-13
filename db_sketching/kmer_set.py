@@ -121,46 +121,36 @@ class TruncatedKMerSet(FracMinHash):
     Create (k-l)-mer set based on the constructed k-mer sets and
     try to infer ANI.
     """
-    def __init__(self, condition, k, canonical=False) -> None:
-        super().__init__(condition, k, canonical)
+    def __init__(self, condition, k) -> None:
+        super().__init__(condition, k, canonical=False)
         
-        # Utils to find the canonical k-mers
-        self.kmer = KMer(k)
+    
+    def insert_sequence(self, sequence):
+        # Store only the original kmers
+        kmers = self.seq2vec.kmers(sequence)
+
+        self.set.update([i for i in kmers if self.condition(i)])
     
     def truncate_set(self, l):
         return set([i >> (2 * l) for i in self.set])
     
-    def to_canonical_kmer_set(self, kmer_set):
-        """
-        Transform all k-mers in `kmer_set` into its corresponding canonical k-mer.
-        """
-        res = set()
-        for i in kmer_set:
-            res.add(self.kmer.canonical_kmer(i))
-        
-        return res
-    
-
-
     
     def ANI_estimation(self, that):
-        # Find containment index of the k-mer set
-        kmer_set_containment = len(self.set.intersection(that.set)) / len(self.set)
-
         # Find containment index of the (k-1)-mer set
         this_k_1_mer_set = set([i >> 2 for i in self.set])
         that_k_1_mer_set = set([i >> 2 for i in that.set])
 
-        if self.canonical:
-            this_k_1_mer_set = self.to_canonical_kmer_set(this_k_1_mer_set)
-            that_k_1_mer_set = self.to_canonical_kmer_set(that_k_1_mer_set)
-
+        # Find containment index of the k-mer set
+        kmer_set_containment = len(self.set.intersection(that.set)) / len(self.set)
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
         print("k-mer containment", kmer_set_containment, "(k-1)-mer set containment", k_1_mer_set_containment)
+        p1 = kmer_set_containment ** (1/(self.k))
+        p2 = k_1_mer_set_containment ** (1/(self.k-1))
+        p3 = kmer_set_containment / k_1_mer_set_containment
         print("Estimation using k", kmer_set_containment ** (1/(self.k)))
         print("Estimation using k-1", k_1_mer_set_containment ** (1/(self.k-1)))
         print("Estimation using conditional prob", kmer_set_containment / k_1_mer_set_containment)
-        return kmer_set_containment / k_1_mer_set_containment
+        return (p1 + p2 + p3) / 3
     
     def k_specific_containment(self, that, k):
         self_low_kmer_set = self.truncate_set(self.k-k)

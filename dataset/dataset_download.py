@@ -62,7 +62,7 @@ class ReferenceGenomeDownloader:
         Given a metadata_df with columns "species_taxid", "genus_taxid", "ncbi_genbank_assembly_accession"
         download the references for all species/genera/families.
 
-        For each genera, only take `num_samples` species to speed things up.
+        For each species/genera/families (specified by `level`), only take `num_samples` references to speed things up.
         """
         if level not in ["species", "genus", "family"]:
             print("[ERROR]\t\tThe level parameter must be one of `species`, `genus` or `family`.")
@@ -99,5 +99,8 @@ if __name__ == "__main__":
     d = ReferenceGenomeDownloader()
     
     # Read metadata
-    metadata_df = pd.read_csv("/home/bensonlzl/Downloads/metadata_with_taxid.csv")
-    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=100, level="family")
+    metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
+
+    # Download 10 genomes in the genus escherichia
+    metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="species")
