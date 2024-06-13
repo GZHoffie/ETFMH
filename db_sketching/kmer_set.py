@@ -89,7 +89,7 @@ class FracMinHash(KMerSet):
           returns a boolean value. If it returns true, we include that k-mer in our subset.
         - k (int): length of k-mer.
     """
-    def __init__(self, condition, k, canonical) -> None:
+    def __init__(self, condition, k, canonical=False) -> None:
         super().__init__(k, canonical)
         self.condition = condition
     
@@ -108,11 +108,26 @@ class TruncatedKMerSet(FracMinHash):
     Create (k-l)-mer set based on the constructed k-mer sets and
     try to infer ANI.
     """
-    def __init__(self, condition, k, canonical) -> None:
+    def __init__(self, condition, k, canonical=False) -> None:
         super().__init__(condition, k, canonical)
+        
+        # Utils to find the canonical k-mers
+        self.kmer = KMer(k)
     
     def truncate_set(self, l):
         return set([i >> (2 * l) for i in self.set])
+    
+    def to_canonical_kmer_set(self, kmer_set):
+        """
+        Transform all k-mers in `kmer_set` into its corresponding canonical k-mer.
+        """
+        res = set()
+        for i in kmer_set:
+            res.add(self.kmer.canonical_kmer(i))
+        
+        return res
+    
+
 
     
     def ANI_estimation(self, that):
@@ -122,14 +137,22 @@ class TruncatedKMerSet(FracMinHash):
         # Find containment index of the (k-1)-mer set
         this_k_1_mer_set = set([i >> 2 for i in self.set])
         that_k_1_mer_set = set([i >> 2 for i in that.set])
+
+        if self.canonical:
+            this_k_1_mer_set = self.to_canonical_kmer_set(this_k_1_mer_set)
+            that_k_1_mer_set = self.to_canonical_kmer_set(that_k_1_mer_set)
+
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
-        print(kmer_set_containment, k_1_mer_set_containment)
+        print("k-mer containment", kmer_set_containment, "(k-1)-mer set containment", k_1_mer_set_containment)
+        print("Estimation using k", kmer_set_containment ** (1/(self.k)))
+        print("Estimation using k-1", k_1_mer_set_containment ** (1/(self.k-1)))
+        print("Estimation using conditional prob", kmer_set_containment / k_1_mer_set_containment)
         return kmer_set_containment / k_1_mer_set_containment
 
 
 
 class ErrorTolerantFracMinHash(FracMinHash):
-    def __init__(self, condition, k, canonical) -> None:
+    def __init__(self, condition, k, canonical=False) -> None:
         super().__init__(condition, k, canonical)
         self.kmer = KMer(k)
     

@@ -211,6 +211,15 @@ class KMer:
         
         return rev_comp_sequence
     
+    def canonical_kmer(self, kmer: int):
+        """
+        Given a k-mer, return the corresponding canonical k-mer.
+        """
+        rev_comp_sequence = self.reverse_complement(self.kmer_to_list(kmer))
+        rev_comp_hash = self.list_to_kmer(rev_comp_sequence)
+        return min(rev_comp_hash, kmer)
+
+    
     def distance_one_neighbors(self, kmer: int, distance: str = "hamming", canonical: bool = True):
         """
         Return a list of hash values that has distance one to self.kmer.
