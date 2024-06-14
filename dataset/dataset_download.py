@@ -107,12 +107,13 @@ if __name__ == "__main__":
     taxonomy_level = "species"
     tax_name = taxonomy_level + "_name"
     tax_id = taxonomy_level + "_taxid"
+    desired_samples = 500
 
     # Restrict metadata to species/genus with large number of samples of a single species/genus
     for x in set(metadata_df[tax_id]):
         if isinstance(x,(int,float)):
             restricted_metadata_df = metadata_df[metadata_df[tax_id] == x]
-            if len(restricted_metadata_df) > 500:
+            if len(restricted_metadata_df) >= desired_samples:
                 if len(set(restricted_metadata_df[tax_name])) == 1:
                     print(x,set(restricted_metadata_df[tax_name]))
                     specified_set[x] = list(set(restricted_metadata_df[tax_name]))[0]
@@ -121,14 +122,7 @@ if __name__ == "__main__":
     print(specified_set)
 
     # Filter metadata
-    metadata_df = metadata_df[metadata_df["genus_taxid"].isin(specified_set)]
-    # d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=100, level=taxonomy_level)
+    metadata_df = metadata_df[metadata_df[tax_id].isin(specified_set)]
+    # d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=desired_samples, level=taxonomy_level)
 
-    # Automatically rename directories from taxid to names
-    # for id,genus in specified_set.items():
-    #     print("mv", "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/"+str(id),"/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/"+genus)
-    #     subprocess.run(
-    #         [
-    #             "mv", "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/"+str(int(id)),"/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/Single-Genus/"+genus
-    #         ]
-    #     )
+

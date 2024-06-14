@@ -1,6 +1,15 @@
 from db_sketching.utils import Seq2KMers, KMer
 from Bio import SeqIO
 
+def compute_resemblence(set_1, set_2):
+    intersection = set_1.intersection(set_2)
+    union = set_1.union(set_2)
+    return len(intersection) / len(union)
+
+def compute_containment(set_1, set_2):
+    intersection = set_1.intersection(set_2)
+    return len(intersection) / len(set_1)
+
 class KMerSet:
     """
     Base class of the k-mer set.
@@ -67,9 +76,7 @@ class KMerSet:
         Args:
             - that (KMerSet): Another KMerSet object to compare to.
         """
-        intersection = len(self.set.intersection(that.set))
-        union = len(self.set.union(that.set))
-        return intersection / union
+        return compute_resemblence(self.set,that.set)
     
     def containment(self, that):
         """
@@ -77,8 +84,7 @@ class KMerSet:
         Args:
             - that (KMerSet): Another KMerSet object to compare to.
         """
-        intersection = len(self.set.intersection(that.set))
-        return intersection / len(self.set)
+        return compute_containment(self.set,that.set)
 
     def ANI_estimation(self, that):
         """
@@ -114,8 +120,76 @@ class FracMinHash(KMerSet):
 
         self.set.update([i for i in kmers if self.condition(i)])
 
+    
 
+class MeanFracMinHash(KMerSet):
+    """
+    A version of FracMinHash that stores kmers corresponding to multiple hash function 
+    and takes the mean across all of them
 
+    Args:
+        - conditons (list[function<bool>]): a list of functions, each of which takes a k-mer hash value and
+            returns True if that k-mer should be in the set
+        - k (int): length of the k-mer
+    """
+    def __init__(self, conditions, k, canonical) -> None:
+        super().__init__(k, canonical)
+        self.conditions = conditions
+        self.num_conditions = len(conditions)
+        self.sets = [set() for _ in range(self.num_conditions)]
+    
+    def insert_sequence(self, sequence):
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
+        for idx, condition in enumerate(self.conditions):
+            self.sets[idx].update([i for i in kmers if condition(i)])
+
+    def reset(self):
+        """
+        Set the k-mer sets to empty.
+        """
+        self.sets = [set() for _ in range(self.num_conditions)]
+
+    def get_condition_set(self, condition_idx):
+        return self.sets[condition_idx]
+    
+    def resemblence_at_index(self, that, condition_idx):
+        """
+        Calculate the Jaccard index between self.set and that.set.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        return compute_resemblence(self.sets[condition_idx],that.sets[condition_idx])
+    
+    def resemblence(self, that):
+        return sum(self.resemblence_at_index(that,idx) for idx in range(self.num_conditions)) / self.num_conditions
+    
+    def containment_at_index(self, that, condition_idx):
+        """
+        Calculate the containment index of self.set in that.set.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        return compute_containment(self.sets[condition_idx],that.sets[condition_idx])
+
+    def containment(self, that):
+        return sum(self.containment_at_index(that,idx) for idx in range(self.num_conditions)) / self.num_conditions
+
+    def ANI_estimation(self, that):
+        """
+        Estimate ANI using the default estimator.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        # Estimator using binomial distribution
+        return self.containment(that) ** (1/self.k)
+    
+        # Estimator using Poisson distribution
+        #j = self.containment(that)
+        #return 1 + 1/self.k * np.log(2 * j / (1 + j))
 class TruncatedKMerSet(FracMinHash):
     """
     Create (k-l)-mer set based on the constructed k-mer sets and
