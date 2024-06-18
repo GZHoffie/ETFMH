@@ -16,7 +16,7 @@ class ReferenceGenomeDownloader:
     def __init__(self) -> None:
         pass
     
-    def _download_reference(self, accession, directory, name):
+    def _download_reference(self, accession, directory):
         """
         Download the reference using the given accession number, and store it in
         ${directory}/${name}.fna. If the file already exists, we append to the file.
@@ -32,15 +32,15 @@ class ReferenceGenomeDownloader:
 
         # Download using NCBI datasets
         subprocess.run(["datasets", "download", "genome", "accession",
-                         accession, "--filename", name + ".zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if os.path.exists(name + ".zip"):
-            subprocess.run(["unzip", name + ".zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                         accession, "--filename", accession + ".zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if os.path.exists(accession + ".zip"):
+            subprocess.run(["unzip", accession + ".zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # Store the results in ${directory}/${taxid}.fna
         files_name = glob.glob("ncbi_dataset/data/*/*.fna")
-        with open(name + ".fna", "wb") as f:
+        with open(accession + ".fna", "wb") as f:
             subprocess.run(["cat"] + files_name, stdout=f)
-        subprocess.run(["rm", "-r", "ncbi_dataset", name + ".zip", "README.md"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["rm", "-r", "ncbi_dataset", accession + ".zip", "README.md"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def _remove_directory(self, directory):
         """
@@ -54,7 +54,7 @@ class ReferenceGenomeDownloader:
         Given a list of accession, Download the corresponding reference under directory.
         """
         for i, accession in tqdm(enumerate(accession_list)):
-            self._download_reference(accession, directory, str(i))
+            self._download_reference(accession, directory)
             
     
     def download_all_references(self, metadata_df, directory, num_samples=None, level="genus"):
@@ -68,7 +68,7 @@ class ReferenceGenomeDownloader:
             print("[ERROR]\t\tThe level parameter must be one of `species`, `genus` or `family`.")
             return
         
-        key = level + "_taxid"
+        key = level + "_name"
 
         # The set of all species/genera/families
         all_set = set(metadata_df.dropna(subset=[key])[key])
@@ -84,7 +84,7 @@ class ReferenceGenomeDownloader:
                 part_df = part_df.sample(num_samples)
             
             # Download the references
-            argument_list.append((part_df["ncbi_genbank_assembly_accession"], directory + str(int(item))))
+            argument_list.append((part_df["ncbi_genbank_assembly_accession"], directory + str(item)))
 
 
         # Use multiprocessing
@@ -102,5 +102,5 @@ if __name__ == "__main__":
     metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
 
     # Download 10 genomes in the genus escherichia
-    metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
+    metadata_df = metadata_df[metadata_df["species_name"] == "Escherichia coli"]
     d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="species")

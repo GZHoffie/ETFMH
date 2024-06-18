@@ -8,13 +8,15 @@ class Seq2KMers:
     Util class that outputs the sequence of K-mers given an input sequence.
     """
 
-    def __init__(self, seed_length : int):
+    def __init__(self, seed_template):
         """
         Args:
-            - seed_length (int): length of k-mer.
+            - seed_template (str): a string consisting of 0 and 1's, indicating which base to include in the seed.
+              For example, seed_template = "1" * 12 represents a contiguous 12-mer, "1001001" means taking one for every
+              3 bases. 
         """
         # Initialize parameters for the minimizer.
-        self._k = seed_length
+        self._k = len(seed_template)
 
         # Utils to find minimizers
         self._nucleotide_to_hash = {'A': 0, 'a': 0,
@@ -22,6 +24,7 @@ class Seq2KMers:
                                     'G': 2, 'g': 2,
                                     'T': 3, 't': 3}
         self._seed_mask = int("1" * 2 * self._k, 2)
+        self._seed_template = int(''.join([char * 2 for char in seed_template]), 2)
 
 
     def _hash(self, sequence : str):
@@ -70,13 +73,13 @@ class Seq2KMers:
                 current_hash = current_hash << 2
                 current_hash = current_hash | sequence[i]
             
-            hash_values.append(current_hash)
+            hash_values.append(current_hash & self._seed_template)
             
             # find the hash of rest of the k-mers
             for i in range(len(sequence) - self._k):
                 current_hash = (current_hash << 2) & self._seed_mask
                 current_hash = current_hash | sequence[i + self._k]
-                hash_values.append(current_hash)
+                hash_values.append(current_hash & self._seed_template)
         
         return hash_values
     
@@ -86,6 +89,7 @@ class Seq2KMers:
     def canonical_kmers(self, sequence : str):
         """
         Given an input sequence, find all the canonical k-mers inside, in the form of a list of hash values.
+        NOTE: canonical k-mers with spaced seeds is not well defined. Use this only when using contiguous seeds.
         """
         forward_hash = self._hash(sequence)
         reverse_hash = self._rev_comp(forward_hash)
@@ -99,6 +103,7 @@ class Seq2KMers:
     def minimizers(self, sequence, window_size, hash_mask=0):
         """
         Find the minimizers of the sequence.
+        NOTE: canonical k-mers with spaced seeds is not well defined. Use this only when using contiguous seeds.
 
         Args:
             - sequence (str): the sequence to be converted.
@@ -150,6 +155,7 @@ class Seq2KMers:
     def all_canonical_kmers(self):
         """
         Return a dictionary that maps all k-mers to their canonical k-mers.
+        NOTE: canonical k-mers with spaced seeds is not well defined. Use this only when using contiguous seeds.
         """
         MASK = 3 # Mask to filter out single nucleotide in k-mer
         vocab = {}
@@ -254,11 +260,11 @@ class KMer:
 
 
 if __name__ == "__main__":
-    seq2kmers = Seq2KMers(3)
-    print(seq2kmers.all_canonical_kmers())
-    print(seq2kmers.canonical_kmers("ACGTGGGCGT"))
+    seq2kmers = Seq2KMers("101")
+    #print(seq2kmers.all_canonical_kmers())
+    print(seq2kmers.kmers("ACGTGGGCGT"))
 
-    a = KMer(19)
-    print(a.distance_one_neighbors(0))
+    #a = KMer(19)
+    #print(a.distance_one_neighbors(0))
 
 
