@@ -63,7 +63,7 @@ class ReferenceGenomeDownloader:
         Given a metadata_df with columns "species_taxid", "genus_taxid", "ncbi_genbank_assembly_accession"
         download the references for all species/genera/families.
 
-        For each genera, only take `num_samples` species to speed things up.
+        For each species/genera/families (specified by `level`), only take `num_samples` references to speed things up.
         """
         if level not in ["species", "genus", "family"]:
             print("[ERROR]\t\tThe level parameter must be one of `species`, `genus` or `family`.")
