@@ -1,4 +1,5 @@
 from db_sketching.utils import Seq2KMers, KMer
+from collections import Counter
 from Bio import SeqIO
 
 class KMerSet:
@@ -6,19 +7,31 @@ class KMerSet:
     Base class of the k-mer set.
     Finding the k-mer set given a (list of) sequences.
     Args:
-        - k (int): length of the k-mer.
+        - kmer_template (str): a string consisting of 0 and 1's, indicating which base to include in the seed.
+              For example, seed_template = "1" * 12 represents a contiguous 12-mer, "1001001" means taking one for every
+              3 bases. Or it can be an integer, e.g. `12`, indicating a contiguous 12-mer.
         - canonical (bool): whether we use canonical k-mers.
+        - multiplicity (bool): Do we take the multiplicity of k-mers into account when
+          calculating the resemblence.
     """
-    def __init__(self, k : int, canonical: bool = False) -> None:
+    def __init__(self, kmer_template : str | int, canonical: bool = False, multiplicity: bool = False) -> None:
         # The set of k-mers
-        self.set = set()
+        self.set = Counter()
 
         # Length of k-mer
-        self.k = k
+        if isinstance(kmer_template, str):
+            self.k = kmer_template.count('1')
+        else:
+            self.k = kmer_template
+
         self.canonical = canonical
+        self.multiplicity = multiplicity
 
         # Method to turn sequence into list of k-mers
-        self.seq2vec = Seq2KMers(k)
+        if isinstance(kmer_template, str):
+            self.seq2vec = Seq2KMers(kmer_template)
+        else:
+            self.seq2vec = Seq2KMers("1" * kmer_template)
 
         # Total length of sequences
         self.length = 0
@@ -59,7 +72,7 @@ class KMerSet:
         """
         Set the k-mer set to empty.
         """
-        self.set = set()
+        self.set = Counter()
     
     def resemblence(self, that):
         """
@@ -67,8 +80,13 @@ class KMerSet:
         Args:
             - that (KMerSet): Another KMerSet object to compare to.
         """
-        intersection = len(self.set.intersection(that.set))
-        union = len(self.set.union(that.set))
+        if self.multiplicity:
+            intersection = sum((self.set & that.set).values())
+            union = sum((self.set | that.set).values())
+        else:
+            intersection = len(self.set & that.set)
+            union = len(self.set | that.set)
+
         return intersection / union
     
     def containment(self, that):
@@ -77,8 +95,14 @@ class KMerSet:
         Args:
             - that (KMerSet): Another KMerSet object to compare to.
         """
-        intersection = len(self.set.intersection(that.set))
-        return intersection / len(self.set)
+        if self.multiplicity:
+            intersection = sum((self.set & that.set).values())
+            self_len = sum(self.set.values())
+        else:
+            intersection = len(self.set & that.set)
+            self_len = len(self.set)
+
+        return intersection / self_len
 
     def ANI_estimation(self, that):
         """
@@ -102,8 +126,8 @@ class FracMinHash(KMerSet):
           returns a boolean value. If it returns true, we include that k-mer in our subset.
         - k (int): length of k-mer.
     """
-    def __init__(self, condition, k, canonical=False) -> None:
-        super().__init__(k, canonical)
+    def __init__(self, condition, kmer_template, canonical=False, multiplicity=False) -> None:
+        super().__init__(kmer_template, canonical, multiplicity)
         self.condition = condition
     
     def insert_sequence(self, sequence):
@@ -121,8 +145,8 @@ class TruncatedKMerSet(FracMinHash):
     Create (k-l)-mer set based on the constructed k-mer sets and
     try to infer ANI.
     """
-    def __init__(self, condition, k) -> None:
-        super().__init__(condition, k, canonical=False)
+    def __init__(self, condition, kmer_template) -> None:
+        super().__init__(condition, kmer_template, canonical=False, multiplicity=False)
         
     
     def insert_sequence(self, sequence):
@@ -137,11 +161,11 @@ class TruncatedKMerSet(FracMinHash):
     
     def ANI_estimation(self, that):
         # Find containment index of the (k-1)-mer set
-        this_k_1_mer_set = set([i >> 2 for i in self.set])
-        that_k_1_mer_set = set([i >> 2 for i in that.set])
+        this_k_1_mer_set = set([i >> 2 for i in self.set.keys()])
+        that_k_1_mer_set = set([i >> 2 for i in that.set.keys()])
 
         # Find containment index of the k-mer set
-        kmer_set_containment = len(self.set.intersection(that.set)) / len(self.set)
+        kmer_set_containment = len(self.set & that.set) / len(self.set)
         k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
         print("k-mer containment", kmer_set_containment, "(k-1)-mer set containment", k_1_mer_set_containment)
         p1 = kmer_set_containment ** (1/(self.k))
@@ -161,8 +185,8 @@ class TruncatedKMerSet(FracMinHash):
         
 
 class ErrorTolerantFracMinHash(FracMinHash):
-    def __init__(self, condition, k, canonical=False) -> None:
-        super().__init__(condition, k, canonical)
+    def __init__(self, condition, kmer_template, canonical=False) -> None:
+        super().__init__(condition, kmer_template, canonical, multiplicity=False)
         self.kmer = KMer(k)
     
     def insert_sequence(self, sequence):
@@ -179,9 +203,9 @@ if __name__ == "__main__":
     def all(kmer_hash):
         return True
     
-    a = TruncatedKMerSet(all, 12)
+    a = FracMinHash(all, 12)
     a.insert_sequence("CGCGCACGTCGTCGTAC")
-    b = TruncatedKMerSet(all, 12)
+    b = FracMinHash(all, 12)
     b.insert_sequence("CGCGCACGTCGTCGTAG")
 
     print(a.ANI_estimation(b))
