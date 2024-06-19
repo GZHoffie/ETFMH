@@ -187,7 +187,7 @@ class TruncatedKMerSet(FracMinHash):
 class ErrorTolerantFracMinHash(FracMinHash):
     def __init__(self, condition, kmer_template, canonical=False) -> None:
         super().__init__(condition, kmer_template, canonical, multiplicity=False)
-        self.kmer = KMer(k)
+        self.kmer = KMer(kmer_template)
     
     def insert_sequence(self, sequence):
         if self.canonical:
