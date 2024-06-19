@@ -45,5 +45,26 @@ class KMerImportanceLearning:
         res = positive_entropy * positive_rate + negative_entropy * (1-positive_rate)
         return res
     
+    def extract_informative_kmers(self, information_gain_threshold = 0):
+        res = dict()
+
+        all_kmers = set()
+        for label in self.label_dict:
+            all_kmers.update(self.counter_dict[label].keys())
+        
+        orig_probs = np.array(self.label_dict.values()) / sum(self.label_dict.values())
+        orig_entropy = np.sum(orig_probs * np.log(orig_probs))
+
+        for kmer in all_kmers:
+            information_gain = orig_entropy - self.conditional_entropy(kmer)
+            if information_gain > information_gain_threshold:
+                res[kmer] = information_gain
+        
+        return res
+    
 
 
+if __name__ == "__main__":
+    from db_sketching.kmer_set import FracMinHash
+
+    
