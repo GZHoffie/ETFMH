@@ -19,6 +19,11 @@ class KMerImportanceLearning:
         
         self.label_dict[label] += 1
 
+    def _log(self, array):
+        """
+        Take the log 2 of the elements in the array. Elements that were zero remains zero.
+        """
+        return np.log2(array, out=np.zeros_like(array, dtype=np.float64), where=(array != 0))
     
     def conditional_entropy(self, kmer: int):
         """
@@ -36,10 +41,11 @@ class KMerImportanceLearning:
         negative_count = np.array(negative_count)
 
         positive_probs = positive_count / np.sum(positive_count)
-        positive_entropy = np.sum(positive_probs * np.log(positive_probs))
+        positive_entropy = - np.sum(positive_probs * self._log(positive_probs))
 
-        negative_probs = positive_count / np.sum(positive_count)
-        negative_entropy = np.sum(negative_probs * np.log(negative_probs))
+        negative_probs = negative_count / np.sum(negative_count)
+        negative_entropy = - np.sum(negative_probs * self._log(negative_probs))
+
 
         positive_rate = np.sum(positive_count) / np.sum(positive_count + negative_count)
         res = positive_entropy * positive_rate + negative_entropy * (1-positive_rate)
@@ -52,8 +58,8 @@ class KMerImportanceLearning:
         for label in self.label_dict:
             all_kmers.update(self.counter_dict[label].keys())
         
-        orig_probs = np.array(self.label_dict.values()) / sum(self.label_dict.values())
-        orig_entropy = np.sum(orig_probs * np.log(orig_probs))
+        orig_probs = np.array(list(self.label_dict.values())) / sum(self.label_dict.values())
+        orig_entropy = - np.sum(orig_probs * self._log(orig_probs))
 
         for kmer in all_kmers:
             information_gain = orig_entropy - self.conditional_entropy(kmer)

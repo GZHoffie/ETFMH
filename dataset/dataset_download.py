@@ -102,5 +102,6 @@ if __name__ == "__main__":
     metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
 
     # Download 10 genomes in the genus escherichia
-    metadata_df = metadata_df[metadata_df["species_name"] == "Escherichia coli"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="species")
+    family_samples = set(metadata_df["family_name"].sample(20))
+    metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="family")
