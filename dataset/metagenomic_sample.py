@@ -44,7 +44,7 @@ class MetagenomicSampleGenerator:
         abundance_ground_truth = {}
 
         # Simulate reads from pathogen genome
-        print(references)
+        #print(references)
         for file in references:
             # determine number of reads of this species
             num_reads = int(species_abundance[species_index] * read_num * 4000)
@@ -90,4 +90,4 @@ if __name__ == "__main__":
 
     g = MetagenomicSampleGenerator()
     #print(glob.glob("./data_temp/*/*.fna"))
-    g.generate_sample(glob.glob("./data_temp/*/*.fna"), 100, "./", "EColi")
+    g.generate_sample(glob.glob("./single_species/*/*.fna"), 100000, "./", "EColi")

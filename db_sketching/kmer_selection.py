@@ -150,8 +150,8 @@ class KMerChiSquaredTest(KMerInformationGain):
 
         # Do chi-squared test
         degree_of_freedom = len(positive_count) - 1
-        statistics = (positive_count - positive_expected) ** 2 / positive_expected + \
-                     (negative_count - negative_expected) ** 2 / negative_expected
+        statistics = np.sum((positive_count - positive_expected) ** 2 / positive_expected + \
+                     (negative_count - negative_expected) ** 2 / negative_expected)
         p_value = 1 - chi2(degree_of_freedom).cdf(statistics)
 
         return p_value
@@ -166,7 +166,7 @@ class KMerChiSquaredTest(KMerInformationGain):
 
         for kmer in all_kmers:
             p_value = self.chi_squared_test(kmer)
-            if kwargs["threshold"] is not None and p_value <= kwargs["threshold"]:
+            if "threshold" not in kwargs or p_value <= kwargs["threshold"]:
                 res[kmer] = p_value
 
         return res
