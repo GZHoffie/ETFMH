@@ -1,6 +1,16 @@
 from db_sketching.utils import Seq2KMers, KMer
 from collections import Counter
 from Bio import SeqIO
+import statistics
+
+def compute_resemblence(set_1, set_2):
+    intersection = set_1.intersection(set_2)
+    union = set_1.union(set_2)
+    return len(intersection) / len(union)
+
+def compute_containment(set_1, set_2):
+    intersection = set_1.intersection(set_2)
+    return len(intersection) / len(set_1)
 
 class KMerSet:
     """
@@ -138,7 +148,85 @@ class FracMinHash(KMerSet):
 
         self.set.update([i for i in kmers if self.condition(i)])
 
+    
 
+class EstimatorFracMinHash(KMerSet):
+    """
+    A version of FracMinHash that stores kmers corresponding to multiple hash function 
+    and uses an estimator to obtain a final result
+
+    Additional Args:
+        - conditions (list[function<bool>]): 
+            a list of functions, each of which takes a k-mer hash value and
+            returns True if that k-mer should be in the set
+
+        - estimator (function from list to float): 
+            a function that takes in sampled values and 
+            outputs an estimate of the true value
+    """
+    def __init__(self, conditions, kmer_template, canonical=False, multiplicity=False, estimator=statistics.mean) -> None:
+        super().__init__(kmer_template, canonical, multiplicity)
+        self.conditions = conditions
+        self.num_conditions = len(conditions)
+        self.sets = [set() for _ in range(self.num_conditions)]
+        self.estimator = estimator
+    
+    def insert_sequence(self, sequence):
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
+        for idx, condition in enumerate(self.conditions):
+            self.sets[idx].update([i for i in kmers if condition(i)])
+
+    def reset(self):
+        """
+        Set the k-mer sets to empty.
+        """
+        self.sets = [set() for _ in range(self.num_conditions)]
+
+    def get_condition_set(self, condition_idx):
+        return self.sets[condition_idx]
+    
+    def resemblence_at_index(self, that, condition_idx):
+        """
+        Calculate the Jaccard index between self.set and that.set.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        return compute_resemblence(self.sets[condition_idx],that.sets[condition_idx])
+    
+    def resemblence(self, that):
+        return self.estimator(self.resemblence_at_index(that,idx) for idx in range(self.num_conditions))
+    
+    def containment_at_index(self, that, condition_idx):
+        """
+        Calculate the containment index of self.set in that.set.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        return compute_containment(self.sets[condition_idx],that.sets[condition_idx])
+
+    def containment(self, that):
+        return self.estimator(self.containment_at_index(that,idx) for idx in range(self.num_conditions))
+
+    def ANI_estimation(self, that):
+        """
+        Estimate ANI using the default estimator.
+        Args:
+            - that (MeanFracMinHash): Another MeanFracMinHash object to compare to.
+        """
+        # Estimator using binomial distribution
+        return self.containment(that) ** (1/self.k)
+    
+        # Estimator using Poisson distribution
+        #j = self.containment(that)
+        #return 1 + 1/self.k * np.log(2 * j / (1 + j))
+
+
+class MultiSeedFracMinHash(FracMinHash):
+    pass
 
 class TruncatedKMerSet(FracMinHash):
     """

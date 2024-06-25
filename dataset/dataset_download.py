@@ -16,11 +16,12 @@ class ReferenceGenomeDownloader:
     def __init__(self) -> None:
         pass
     
-    def _download_reference(self, accession, directory):
+    def _download_reference(self, accession, directory, name):
         """
         Download the reference using the given accession number, and store it in
         ${directory}/${name}.fna. If the file already exists, we append to the file.
         """
+        print(f"{accession=},{directory=},{name=}")
         if not os.path.isabs(directory):
             print("[WARNING]\tThe path is not an absolute path.")
 
@@ -90,6 +91,7 @@ class ReferenceGenomeDownloader:
         # Use multiprocessing
         print("Using", os.cpu_count(), "CPUs.")
         pool = Pool(os.cpu_count())
+        print(argument_list)
         res = pool.starmap(self.download_reference_from_acession_list, argument_list)
         
         return res
@@ -99,12 +101,53 @@ if __name__ == "__main__":
     d = ReferenceGenomeDownloader()
     
     # Read metadata
-    metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
+    metadata_df = pd.read_csv("/home/bensonlzl/Downloads/metadata_with_taxid.csv")
 
-    # Download 10 genomes in the genus escherichia
-    #family_samples = set(metadata_df["family_name"].sample(20))
-    #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="family")
+    metadata_df = metadata_df.dropna()
 
-    metadata_df = metadata_df[metadata_df["species_name"] == "Escherichia coli"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/single_species/", num_samples=10, level="species")
+
+    specified_set = {}
+    taxonomy_level = "genus"
+    tax_name = taxonomy_level + "_name"
+    tax_id = taxonomy_level + "_taxid"
+
+    sepration_tax_level = "species"
+    sepration_tax_name = sepration_tax_level + "_name"
+    sepration_tax_id = sepration_tax_level + "_taxid"
+
+    desired_samples = 90
+
+    # Restrict metadata to species/genus with large number of samples of a single species/genus
+    # for x in set(metadata_df[tax_id]):
+    #     if isinstance(x,(int,float)):
+    #         restricted_metadata_df = metadata_df[metadata_df[tax_id] == x]
+    #         if len(restricted_metadata_df) >= desired_samples:
+    #             if len(set(restricted_metadata_df[tax_name])) == 1:
+    #                 print(x,set(restricted_metadata_df[tax_name]))
+    #                 specified_set[x] = list(set(restricted_metadata_df[tax_name]))[0]
+    #                 # print(restricted_metadata_df)
+
+
+    # Restrict metadata to species/genus with large number of samples of a single species/genus with different subgenera
+    
+    download_df = pd.DataFrame()
+    
+    for x in set(metadata_df[tax_id]):
+        restricted_metadata_df = metadata_df[(metadata_df[tax_id] == x)]
+        if len(set(restricted_metadata_df[tax_name])) == 1 and len(set(restricted_metadata_df[sepration_tax_id])) >= desired_samples:
+            print(x,len(set(restricted_metadata_df[sepration_tax_id])))
+            print(set(restricted_metadata_df[tax_name]))
+            unique_df = restricted_metadata_df[~restricted_metadata_df[sepration_tax_id].duplicated()]
+            # print(unique_df)
+            download_df = pd.concat([download_df,unique_df])
+            print(len(download_df))
+            # print(restricted_metadata_df)
+                    
+    print(download_df)
+
+    # Filter metadata
+    # metadata_df = metadata_df[metadata_df[tax_id].isin(specified_set)]
+    metadata_df = download_df
+    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=desired_samples, level=taxonomy_level)
+
+
