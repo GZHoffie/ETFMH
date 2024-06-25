@@ -103,26 +103,51 @@ if __name__ == "__main__":
     # Read metadata
     metadata_df = pd.read_csv("/home/bensonlzl/Downloads/metadata_with_taxid.csv")
 
+    metadata_df = metadata_df.dropna()
+
+
     specified_set = {}
-    taxonomy_level = "species"
+    taxonomy_level = "genus"
     tax_name = taxonomy_level + "_name"
     tax_id = taxonomy_level + "_taxid"
-    desired_samples = 500
+
+    sepration_tax_level = "species"
+    sepration_tax_name = sepration_tax_level + "_name"
+    sepration_tax_id = sepration_tax_level + "_taxid"
+
+    desired_samples = 90
 
     # Restrict metadata to species/genus with large number of samples of a single species/genus
+    # for x in set(metadata_df[tax_id]):
+    #     if isinstance(x,(int,float)):
+    #         restricted_metadata_df = metadata_df[metadata_df[tax_id] == x]
+    #         if len(restricted_metadata_df) >= desired_samples:
+    #             if len(set(restricted_metadata_df[tax_name])) == 1:
+    #                 print(x,set(restricted_metadata_df[tax_name]))
+    #                 specified_set[x] = list(set(restricted_metadata_df[tax_name]))[0]
+    #                 # print(restricted_metadata_df)
+
+
+    # Restrict metadata to species/genus with large number of samples of a single species/genus with different subgenera
+    
+    download_df = pd.DataFrame()
+    
     for x in set(metadata_df[tax_id]):
-        if isinstance(x,(int,float)):
-            restricted_metadata_df = metadata_df[metadata_df[tax_id] == x]
-            if len(restricted_metadata_df) >= desired_samples:
-                if len(set(restricted_metadata_df[tax_name])) == 1:
-                    print(x,set(restricted_metadata_df[tax_name]))
-                    specified_set[x] = list(set(restricted_metadata_df[tax_name]))[0]
-                    # print(restricted_metadata_df)
+        restricted_metadata_df = metadata_df[(metadata_df[tax_id] == x)]
+        if len(set(restricted_metadata_df[tax_name])) == 1 and len(set(restricted_metadata_df[sepration_tax_id])) >= desired_samples:
+            print(x,len(set(restricted_metadata_df[sepration_tax_id])))
+            print(set(restricted_metadata_df[tax_name]))
+            unique_df = restricted_metadata_df[~restricted_metadata_df[sepration_tax_id].duplicated()]
+            # print(unique_df)
+            download_df = pd.concat([download_df,unique_df])
+            print(len(download_df))
+            # print(restricted_metadata_df)
                     
-    print(specified_set)
+    print(download_df)
 
     # Filter metadata
-    metadata_df = metadata_df[metadata_df[tax_id].isin(specified_set)]
-    # d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=desired_samples, level=taxonomy_level)
+    # metadata_df = metadata_df[metadata_df[tax_id].isin(specified_set)]
+    metadata_df = download_df
+    d.download_all_references(metadata_df, "/home/bensonlzl/Desktop/UROP/GIS-2024/coding/data_temp/", num_samples=desired_samples, level=taxonomy_level)
 
 
