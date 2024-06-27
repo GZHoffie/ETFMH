@@ -46,6 +46,7 @@ class MetagenomicSampleGenerator:
         # Simulate reads from pathogen genome
         #print(references)
         for file in references:
+            print("Simulating reads from file", file)
             # determine number of reads of this species
             num_reads = int(species_abundance[species_index] * read_num * 4000)
 

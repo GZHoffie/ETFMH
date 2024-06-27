@@ -1,6 +1,7 @@
 from db_sketching.kmer_set import KMerSet
 from collections import Counter
 import numpy as np
+import pickle
 
 class KMerSelection:
     def __init__(self):
@@ -32,6 +33,25 @@ class KMerInformationGain(KMerSelection):
             self.counter_dict[label] += Counter(set(self.kmer_set.set.keys()))
         
         self.label_dict[label] += 1
+
+    def store(self, file_name):
+        """
+        Store self.counter_dict and self.label_dict in a pickle file "file_name".
+        """
+        import pickle
+
+        with open(file_name, "wb") as f:
+            pickle.dump((self.counter_dict, self.label_dict), f)
+    
+    def load(self, file_name):
+        """
+        Load the pickle file into self.counter_dict and self.label_dict.
+        """
+        import pickle
+
+        with open(file_name, "rb") as f:
+            self.counter_dict, self.label_dict = pickle.load(f)
+
 
     def _log(self, array):
         """

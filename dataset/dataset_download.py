@@ -104,7 +104,7 @@ if __name__ == "__main__":
     # Download 10 genomes in the genus escherichia
     #family_samples = set(metadata_df["family_name"].sample(20))
     #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=10, level="family")
+    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=20, level="family")
 
-    metadata_df = metadata_df[metadata_df["species_name"] == "Escherichia coli"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/single_species/", num_samples=10, level="species")
+    metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Escherichia_data/", num_samples=10, level="species")

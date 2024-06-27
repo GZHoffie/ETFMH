@@ -1,3 +1,9 @@
 *.fna
 __pycache__
 data_temp
+*.syldb
+*.csv
+*.tsv
+*.fasta
+*.sylsp
+*.pkl
