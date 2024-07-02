@@ -99,12 +99,19 @@ if __name__ == "__main__":
     d = ReferenceGenomeDownloader()
     
     # Read metadata
-    metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
+    metadata_df = pd.read_csv("../metadata_with_taxid.csv")
 
     # Download 10 genomes in the genus escherichia
     #family_samples = set(metadata_df["family_name"].sample(20))
     #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
     #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=20, level="family")
 
-    metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Escherichia_data/", num_samples=10, level="species")
+    #metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
+    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Escherichia_data/", num_samples=10, level="species")
+
+    # Download things not in Escherichia
+    import random
+    metadata_df = metadata_df[metadata_df["genus_name"] != "Escherichia"]
+    genus_samples = random.sample(set(metadata_df["genus_name"]), 10)
+    metadata_df = metadata_df[metadata_df["genus_name"].isin(genus_samples)]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="genus")

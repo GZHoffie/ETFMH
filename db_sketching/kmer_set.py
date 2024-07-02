@@ -24,7 +24,7 @@ class KMerSet:
         - multiplicity (bool): Do we take the multiplicity of k-mers into account when
           calculating the resemblence.
     """
-    def __init__(self, kmer_template : str | int, canonical: bool = False, multiplicity: bool = False) -> None:
+    def __init__(self, kmer_template, canonical: bool = False, multiplicity: bool = False) -> None:
         # The set of k-mers
         self.set = Counter()
 
