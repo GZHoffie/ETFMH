@@ -127,6 +127,6 @@ if __name__ == "__main__":
     #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Staphylococcaceae_data/", num_samples=20, level="genus")
 
     metadata_df = metadata_df[metadata_df["family_name"] != "Staphylococcaceae"]
-    genus_samples = random.sample(set(metadata_df["genus_name"]), 10)
-    metadata_df = metadata_df[metadata_df["genus_name"].isin(genus_samples)]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="genus")
+    family_samples = random.sample(list(metadata_df["family_name"]), 20)
+    metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="family")
