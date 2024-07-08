@@ -126,7 +126,13 @@ if __name__ == "__main__":
     #metadata_df = metadata_df[metadata_df["family_name"] == "Staphylococcaceae"]
     #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Staphylococcaceae_data/", num_samples=20, level="genus")
 
-    metadata_df = metadata_df[metadata_df["family_name"] != "Staphylococcaceae"]
-    family_samples = random.sample(list(metadata_df["family_name"]), 20)
-    metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="family")
+    #metadata_df = metadata_df[metadata_df["family_name"] != "Staphylococcaceae"]
+    #family_samples = random.sample(list(metadata_df["family_name"]), 20)
+    #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
+    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="family")
+
+    # Randomly sample 100 species
+    metadata_df = metadata_df.dropna()
+    species_samples = random.sample(list(metadata_df["species_name"]), 50)
+    metadata_df = metadata_df[metadata_df["species_name"].isin(species_samples)]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/sensitivity_test/", num_samples=1, level="species")

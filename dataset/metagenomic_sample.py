@@ -10,7 +10,7 @@ class MetagenomicSampleGenerator:
     def __init__(self) -> None:
         pass
 
-    def generate_sample(self, references, read_num, output_directory, output_file_name, distribution="log_normal"):
+    def generate_sample(self, references, output_directory, output_file_name, total_read_num=None, average_coverage=None, distribution="log_normal"):
         """
         Generate a metagenomic sample.
 
@@ -48,10 +48,14 @@ class MetagenomicSampleGenerator:
         for file in references:
             print("Simulating reads from file", file)
             # determine number of reads of this species
-            num_reads = int(species_abundance[species_index] * read_num * 4000)
+            if total_read_num is not None:
+                num_reads = str(int(species_abundance[species_index] * total_read_num * 4000))
+            elif average_coverage is not None:
+                num_reads = str(average_coverage) + "x"
+
 
             # Simulate reads
-            simulated_read = subprocess.run(["badread", "simulate", "--reference", file, "--quantity", str(num_reads), "--length", "4000,2000", 
+            simulated_read = subprocess.run(["badread", "simulate", "--reference", file, "--quantity", num_reads, "--length", "4000,2000", 
                                              "--glitches", "0,0,0", "--junk_reads", "0", "--random_reads", "0", "--chimeras", "0"], capture_output=True)
             
             # Store the reads in `reads` list
@@ -91,4 +95,8 @@ if __name__ == "__main__":
 
     g = MetagenomicSampleGenerator()
     #print(glob.glob("./data_temp/*/*.fna"))
-    g.generate_sample(glob.glob("./single_species/*/*.fna"), 100000, "./", "EColi")
+    #g.generate_sample(glob.glob("./single_species/*/*.fna"), 100000, "./", "EColi")
+    
+    coverages = [0.008, 0.015, 0.0284, 0.0535, 0.101, 0.1902, 0.3585, 0.6757, 1.2734, 2.4]
+    for coverage in coverages:
+        g.generate_sample(glob.glob("./sensitivity_test/*/*.fna"), "./sensitivity_test_samples", "test_coverage_" + str(coverage), average_coverage=coverage)
