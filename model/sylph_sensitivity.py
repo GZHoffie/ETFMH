@@ -1,9 +1,11 @@
 import numpy as np
+from collections import Counter
 
-true_coverage_list = np.arange(0.01, 0.02, 0.01)
+true_coverage_list = [0.008, 0.015, 0.0284, 0.0535, 0.101, 0.1902, 0.3585, 0.6757]
 read_error_rate = 0.05
 num_kmers = 4000000 # for E. coli
-num_simulations = 100
+c = 20
+num_simulations = 1000
 k = 21
 
 for coverage in true_coverage_list:
@@ -11,16 +13,20 @@ for coverage in true_coverage_list:
     effective_coverage = coverage * ((1-read_error_rate) ** k)
     num_reported = 0
     total_num = 0
-    for _ in range(num_simulations):
-        samples = np.random.poisson(effective_coverage, num_kmers)
-        containment_index = np.sum(samples > 0) / len(samples)
-        N1 = np.sum(samples == 1)
-        N2 = np.sum(samples == 2)
+    while total_num < num_simulations:
+        # Sample a number of k-mers
+        kmer_samples = np.random.choice(np.arange(int(num_kmers / c)), int(effective_coverage * num_kmers / c))
+        kmer_counter = Counter(kmer_samples)
+        
+        # Find the containment index
+        containment_index = len(kmer_counter) / int(num_kmers / c)
+        N1 = list(kmer_counter.values()).count(1)
+        N2 = list(kmer_counter.values()).count(2)
         if N1 < 3 or N2 < 3:
             continue
         estimated_lambda = N2 / N1
         estimated_ANI = (containment_index / (1-np.exp(-estimated_lambda))) ** (1/k)
-        print(N2, N1, containment_index, estimated_ANI)
+        #print(effective_coverage, containment_index, estimated_lambda, estimated_ANI)
         if estimated_ANI > 0.95:
             num_reported += 1
         total_num += 1

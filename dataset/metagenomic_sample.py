@@ -27,6 +27,9 @@ class MetagenomicSampleGenerator:
             - output_file_name (str): name of the output files.
             - distribution (either "uniform" or "log_normal"): the distribution of abundance.
         """
+        # mkdir if the directory doesn't exist
+        Path(output_directory).mkdir(parents=True, exist_ok=True)
+
         # decide abundance of the sample
         total_species_num = len(references)
         if distribution == "log_normal":
@@ -39,9 +42,13 @@ class MetagenomicSampleGenerator:
 
         # Assign pathogens the lowest abundance
         species_index = 0
-        reads = []
+        reads = ""
         all_species = []
         abundance_ground_truth = {}
+
+        # Open file for writing
+        f = open(os.path.join(output_directory, output_file_name + ".fastq"), 'w')
+        f.close()
 
         # Simulate reads from pathogen genome
         #print(references)
@@ -55,13 +62,15 @@ class MetagenomicSampleGenerator:
 
 
             # Simulate reads
-            simulated_read = subprocess.run(["badread", "simulate", "--reference", file, "--quantity", num_reads, "--length", "4000,2000", 
+            simulated_read = subprocess.run(["badread", "simulate", "--reference", file, "--quantity", num_reads, "--length", "4000,2000", "--identity", "100,100,0",
                                              "--glitches", "0,0,0", "--junk_reads", "0", "--random_reads", "0", "--chimeras", "0"], capture_output=True)
             
             # Store the reads in `reads` list
-            read_list = simulated_read.stdout.decode("utf-8").split('\n')
-            read_list = [r for i, r in enumerate(read_list) if i % 4 == 1]
-            reads.extend(read_list)
+            #read_list = simulated_read.stdout.decode("utf-8").split('\n')
+            #read_list = [r for i, r in enumerate(read_list) if i % 4 == 1]
+            with open(os.path.join(output_directory, output_file_name + ".fastq"), 'ab') as f:
+                f.write(simulated_read.stdout)
+            #reads += simulated_read.stdout.decode("utf-8")
 
             # Accession = file.stem()
             accession = Path(file).stem
@@ -73,14 +82,8 @@ class MetagenomicSampleGenerator:
             species_index += 1
 
         # Output raw reads
-        read_index = np.arange(len(reads))
-        random.shuffle(read_index)
-
-        read_i = 0
-        with open(os.path.join(output_directory, output_file_name + ".fasta"), 'w') as f:
-            for i, r in enumerate(read_index):
-                f.write(">" + str(i) + "\n")
-                f.write(reads[r] + "\n")
+        #read_index = np.arange(len(reads))
+        #random.shuffle(read_index)
 
 
         # Output ground truth abundance
@@ -97,6 +100,6 @@ if __name__ == "__main__":
     #print(glob.glob("./data_temp/*/*.fna"))
     #g.generate_sample(glob.glob("./single_species/*/*.fna"), 100000, "./", "EColi")
     
-    coverages = [0.008, 0.015, 0.0284, 0.0535, 0.101, 0.1902, 0.3585, 0.6757, 1.2734, 2.4]
+    coverages = [0.008, 0.015, 0.0284, 0.0535, 0.101, 0.1902, 0.3585, 0.6757]
     for coverage in coverages:
         g.generate_sample(glob.glob("./sensitivity_test/*/*.fna"), "./sensitivity_test_samples", "test_coverage_" + str(coverage), average_coverage=coverage)
