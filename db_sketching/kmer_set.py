@@ -24,7 +24,7 @@ class KMerSet:
         - multiplicity (bool): Do we take the multiplicity of k-mers into account when
           calculating the resemblence.
     """
-    def __init__(self, kmer_template : str | int, canonical: bool = False, multiplicity: bool = False) -> None:
+    def __init__(self, kmer_template, canonical: bool = False, multiplicity: bool = False) -> None:
         # The set of k-mers
         self.set = Counter()
 
@@ -245,6 +245,20 @@ class TruncatedKMerSet(FracMinHash):
     
     def truncate_set(self, l):
         return set([i >> (2 * l) for i in self.set])
+    
+    def conditional_probability(self, that):
+        """
+        Calculate Pr[this base is not mutated | previous k-1 bases are not mutated] using
+        the truncated k-mer set.
+        """
+        # Find containment index of the (k-1)-mer set
+        this_k_1_mer_set = set([i >> 2 for i in self.set.keys()])
+        that_k_1_mer_set = set([i >> 2 for i in that.set.keys()])
+
+        # Find containment index of the k-mer set
+        kmer_set_containment = len(self.set & that.set) / len(self.set)
+        k_1_mer_set_containment = len(this_k_1_mer_set.intersection(that_k_1_mer_set)) / len(this_k_1_mer_set)
+        return kmer_set_containment / k_1_mer_set_containment
     
     
     def ANI_estimation(self, that):
