@@ -17,10 +17,12 @@ class GenomeClassifer:
     
     def AUROC(self, genome_file_dict, sample_pairs=100, positive_rate=0.5):
         # Set of all taxonomy labels
-        label_set = set(genome_file_dict)
+        label_list = list(genome_file_dict)
 
 
         for _ in range(sample_pairs):
             if random.random() > positive_rate:
-                # Sample pair from the same 
+                # Sample pair from the same category
+                category = random.choice(label_list)
+                genome_file_dict[category] 
 

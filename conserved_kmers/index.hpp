@@ -1,0 +1,6 @@
+#ifndef CONSERVED_KMERS_INDEX_HPP
+#define CONSERVED_KMERS_INDEX_HPP
+
+
+
+#endif

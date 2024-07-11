@@ -6,11 +6,11 @@ read_error_rate = 0.05
 num_kmers = 4000000 # for E. coli
 c = 200
 num_simulations = 1000
-k = 21
+k = 31
 
 for coverage in true_coverage_list:
     # Find effective coverage
-    effective_coverage = coverage #* ((1-read_error_rate) ** k)
+    effective_coverage = coverage * ((1-read_error_rate) ** k)
     num_reported = 0
     total_num = 0
     for _ in range(num_simulations):
