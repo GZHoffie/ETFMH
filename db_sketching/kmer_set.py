@@ -58,14 +58,14 @@ class KMerSet:
 
         self.set.update(kmers)
 
-    def insert_file(self, file):
+    def insert_file(self, file, mode="fasta"):
         """
         Given a fasta file, insert all sequences in the files into the 
         k-mer set.
         Args:
             - file (str): file name of the fasta file .
         """
-        for record in SeqIO.parse(file, "fasta"):
+        for record in SeqIO.parse(file, mode):
             self.insert_sequence(str(record.seq))
     
     def insert_file_list(self, file_list):
@@ -305,9 +305,10 @@ if __name__ == "__main__":
     def all(kmer_hash):
         return True
     
-    a = FracMinHash(all, 12)
-    a.insert_sequence("CGCGCACGTCGTCGTAC")
-    b = FracMinHash(all, 12)
-    b.insert_sequence("CGCGCACGTCGTCGTAG")
+    a = KMerSet(31, True, True)
+    a.insert_file("/home/zhenhao/tc-benchmark/data/sensitivity_test/s_aureus_coverage_0.0535.fastq", "fastq")
+    N3 = len([i for i in a.set if a.set[i] == 3])
+    N2 = len([i for i in a.set if a.set[i] == 2])
+    N1 = len([i for i in a.set if a.set[i] == 1])
 
-    print(a.ANI_estimation(b))
+    print(N3, N2, N1, N2/N1 * 2, N3/N2 * 3)

@@ -1,5 +1,6 @@
 import numpy as np
 from collections import Counter
+import random
 
 true_coverage_list = np.arange(0, 0.3, 0.005)#[0.008, 0.015, 0.0284, 0.0535, 0.101, 0.1902, 0.3585, 0.6757]
 read_error_rate = 0.05
@@ -7,6 +8,7 @@ num_kmers = 4000000 # for E. coli
 c = 200
 num_simulations = 1000
 k = 31
+read_length = 2000
 
 for coverage in true_coverage_list:
     # Find effective coverage
@@ -27,9 +29,9 @@ for coverage in true_coverage_list:
         if N1 < 3 or N2 < 3:
             estimated_lambda = 1
         else:
-            estimated_lambda = N2 / N1
+            estimated_lambda = N2 / N1 * 2
         estimated_ANI = (containment_index / (1-np.exp(-estimated_lambda))) ** (1/k)
-        #print(effective_coverage, containment_index, estimated_lambda, estimated_ANI)
+        print(effective_coverage, containment_index, estimated_lambda, estimated_ANI)
         if estimated_ANI > 0.95:
             num_reported += 1
         

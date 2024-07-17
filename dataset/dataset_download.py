@@ -102,37 +102,10 @@ if __name__ == "__main__":
     # Read metadata
     metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
 
-    # Download 10 genomes in the genus escherichia
-    #family_samples = set(metadata_df["family_name"].sample(20))
-    #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data_temp/", num_samples=20, level="family")
+    metadata_df = metadata_df[metadata_df["genus_name"] == "Staphylococcus"]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Staphylococcus/", num_samples=50, level="species")
 
-    #metadata_df = metadata_df[metadata_df["genus_name"] == "Escherichia"]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Escherichia_data/", num_samples=10, level="species")
-
-    # Download things not in Escherichia
-    #import random
-    #metadata_df = metadata_df[metadata_df["genus_name"] != "Escherichia"]
-    #genus_samples = random.sample(set(metadata_df["genus_name"]), 10)
-    #metadata_df = metadata_df[metadata_df["genus_name"].isin(genus_samples)]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="genus")
-
-    # Download at most 20 genomes per family
-    # For each species, keep at most one genome
-    #metadata_df = metadata_df.groupby("species_name").sample(1)
-    #d.download_all_references(metadata_df, "/mnt/c/Users/guzh/tax_data/", num_samples=20, level="family")
-
-
-    #metadata_df = metadata_df[metadata_df["family_name"] == "Staphylococcaceae"]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Staphylococcaceae_data/", num_samples=20, level="genus")
-
-    #metadata_df = metadata_df[metadata_df["family_name"] != "Staphylococcaceae"]
-    #family_samples = random.sample(list(metadata_df["family_name"]), 20)
-    #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/Other_data/", num_samples=10, level="family")
-
-    # Randomly sample 100 species
-    metadata_df = metadata_df.dropna()
-    species_samples = random.sample(list(metadata_df["species_name"]), 50)
-    metadata_df = metadata_df[metadata_df["species_name"].isin(species_samples)]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/sensitivity_test/", num_samples=1, level="species")
+    metadata_df = metadata_df[metadata_df["genus_name"] != "Staphylococcus"]
+    family_samples = random.sample(list(metadata_df["family_name"]), 20)
+    metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Other_data/", num_samples=10, level="family")
