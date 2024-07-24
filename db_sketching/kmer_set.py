@@ -301,6 +301,31 @@ class ErrorTolerantFracMinHash(FracMinHash):
             self.set.update([j for j in self.kmer.distance_one_neighbors(i) if self.condition(j)])
 
 
+class NullomerSet(KMerSet):
+    def __init__(self, kmer_template, canonical: bool = False, multiplicity: bool = False) -> None:
+        super().__init__(kmer_template, canonical, multiplicity)
+        self.set = self._init_set()
+    
+
+    def _init_set(self):
+        canonical_kmer_dict = self.seq2vec.all_canonical_kmers()
+        res = set(canonical_kmer_dict.values())
+        return res
+    
+    def insert_sequence(self, sequence : str):
+        """
+        Insert the sequence into k-mer set.
+        """
+        self.length += len(sequence)
+        if self.canonical:
+            kmers = self.seq2vec.canonical_kmers(sequence)
+        else:
+            kmers = self.seq2vec.kmers(sequence)
+
+        self.set.remove(kmers)
+        
+
+
 if __name__ == "__main__":
     def all(kmer_hash):
         return True
