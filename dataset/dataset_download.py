@@ -103,9 +103,9 @@ if __name__ == "__main__":
     metadata_df = pd.read_csv("/home/zhenhao/TDT/gtdb_utils/metadata_with_taxid.csv")
 
     metadata_df = metadata_df[metadata_df["genus_name"] == "Staphylococcus"]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Staphylococcus/", num_samples=50, level="species")
+    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Staphylococcus/", num_samples=10, level="species")
 
-    metadata_df = metadata_df[metadata_df["genus_name"] != "Staphylococcus"]
-    family_samples = random.sample(list(metadata_df["family_name"]), 20)
-    metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
-    d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Other_data/", num_samples=10, level="family")
+    #metadata_df = metadata_df[metadata_df["genus_name"] != "Staphylococcus"]
+    #family_samples = random.sample(list(metadata_df["family_name"]), 100)
+    #metadata_df = metadata_df[metadata_df["family_name"].isin(family_samples)]
+    #d.download_all_references(metadata_df, "/home/zhenhao/ETFMH/data/Other_data/", num_samples=2, level="family")
